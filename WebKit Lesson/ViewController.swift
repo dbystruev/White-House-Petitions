@@ -25,6 +25,7 @@ class ViewController: UITableViewController {
     struct Result: Codable {
         let title: String
         let body: String
+        let signatureCount: Int
     }
     
     var petitions = [Result]()
@@ -32,7 +33,15 @@ class ViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        let url = URL(string: "https://api.whitehouse.gov/v1/petitions.json?limit=100")!
+        let urlString: String
+        
+        if navigationController?.tabBarItem.tag == 0 {
+            urlString = "https://api.whitehouse.gov/v1/petitions.json?limit=100"
+        } else {
+            urlString = "https://api.whitehouse.gov/v1/petitions.json?signatureCountFloor=10000&limit=100"
+        }
+        
+        let url = URL(string: urlString)!
         
         if let json = try? String(contentsOf: url) {
             let inputData = json.data(using: .utf8)!
@@ -53,6 +62,15 @@ class ViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         cell.textLabel?.text = "\(indexPath.row + 1). \(petitions[indexPath.row].title)"
         cell.detailTextLabel?.text = petitions[indexPath.row].body
+        
         return cell
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let vc = DetailViewController()
+        vc.titleItem = petitions[indexPath.row].title
+        vc.detailItem = petitions[indexPath.row].body
+        vc.signatureCount = petitions[indexPath.row].signatureCount
+        navigationController?.pushViewController(vc, animated: true)
     }
 }
